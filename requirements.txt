@@ -1,0 +1,5 @@
+wxpython
+requests
+serial
+flask
+PyPubSub
