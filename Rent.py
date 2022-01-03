@@ -186,10 +186,12 @@ class Frame_Register(wx.Frame):
             self.Account_textbox.Value = ""
             self.Password_textbox.Value = ""
             return
+
         if ret == -2:
             wx.MessageBox("註冊失敗，卡片已存在")
             self.Cardcode_textbox.Value = ""
             return
+            
         if ret == 1:
             wx.MessageBox("註冊成功")
             self.Close()
