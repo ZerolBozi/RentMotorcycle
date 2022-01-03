@@ -169,11 +169,11 @@ class Frame_Register(wx.Frame):
         if account == "" or password == "" :
             wx.MessageBox("註冊資料不能為空")
             return
-
+        
         if lineToken == "" or cardid == "":
             wx.MessageBox("請先連動LineNotify以及刷卡綁定")
             return
-
+        
         if len(account) < 3 or len(password) < 3:
             wx.MessageBox("帳號或密碼長度不能小於3")
             return
@@ -185,6 +185,10 @@ class Frame_Register(wx.Frame):
             wx.MessageBox("註冊失敗，帳號已存在")
             self.Account_textbox.Value = ""
             self.Password_textbox.Value = ""
+            return
+        if ret == -2:
+            wx.MessageBox("註冊失敗，卡片已存在")
+            self.Cardcode_textbox.Value = ""
             return
         if ret == 1:
             wx.MessageBox("註冊成功")
@@ -371,15 +375,16 @@ def getUserNotifyToken(mode,arg):
     conn.close()
     return token
 
-#-1帳號已存在 1註冊成功
+#-1帳號已存在 , -2卡片已註冊 , 1註冊成功
 def register(account,password,cardid,lineToken):
     conn = sqlite3.connect('rent.db')
     db = conn.cursor()
-    db.execute('SELECT Account FROM Members;')
+    db.execute('SELECT * FROM Members;')
     for i in db.fetchall():
-        if account in i:
-            conn.close()
+        if account == i[0]:
             return -1
+        elif cardid == i[2]:
+            return -2
     db.execute(f'INSERT INTO Members VALUES ("{account}", "{password}","{cardid}","{lineToken}",0);')
     conn.commit()
     conn.close()
