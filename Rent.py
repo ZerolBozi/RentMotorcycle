@@ -62,24 +62,23 @@ class Frame_Login(wx.Frame):
     def myListener(self, msg):
         cardid = msg[1:-2]
         ret = loginByCard(cardid)
-        if ret == -1:
-            msg = "帳號不存在"
-        elif ret == -2:
-            msg = "登入失敗"
-        elif ret == 0 or ret == 1:
-            msg = "登入成功"
-        wx.MessageBox(msg)
-        self.Close()
+        if ret == -2:
+            wx.MessageBox("登入失敗")
+            return
         if ret == -1:
             frame = Frame_Register()
+            wx.MessageBox("帳號不存在")
         elif ret == 0:
             frame = Frame_Rent()
             account = getAccountByCard(cardid)
             wx.CallAfter(pub.sendMessage,"myRentListener",msg=account)
+            wx.MessageBox("登入成功")
         elif ret == 1:
             frame = Frame_Return()
             account = getAccountByCard(cardid)
             wx.CallAfter(pub.sendMessage,"myReturnListener",msg=account)
+            wx.MessageBox("登入成功")
+        self.Close()
         frame.Show(True)
 
     def Login_btn_anbdj(self,event):
@@ -88,19 +87,20 @@ class Frame_Login(wx.Frame):
         if account != '' and password != '':
             ret = login(account,password)
             if ret == -1:
-                msg = "帳號不存在"
+                wx.MessageBox("帳號不存在")
+                return
             elif ret == -2:
-                msg = "登入失敗"
-            elif ret == 0 or ret == 1:
-                msg = "登入成功"
-            wx.MessageBox(msg)
-            self.Close()
-            if ret == 0:
+                wx.MessageBox("登入失敗")
+                return
+            elif ret == 0:
                 frame = Frame_Rent()
                 wx.CallAfter(pub.sendMessage,"myRentListener",msg=account)
+                wx.MessageBox("登入成功")
             elif ret == 1:
                 frame = Frame_Return()
                 wx.CallAfter(pub.sendMessage,"myReturnListener",msg=account)
+                wx.MessageBox("登入成功")
+            self.Close()
             frame.Show(True)
         else:
             wx.MessageBox('帳號密碼不能為空')
@@ -323,16 +323,17 @@ def login(account,password):
         if account in i:
             flag=1
             break
-    if not flag:
-        ret = -1
-    db.execute(f'SELECT Password FROM Members WHERE Account = "{account}";')
-    if db.fetchone()[0] == password:
-        db.execute(f'SELECT IsRent FROM Members WHERE Account = "{account}";')
-        ret =  int(db.fetchone()[0])
-        lineToken = getUserNotifyToken(1,account)
-        sendLineNotify(lineToken,f'\n登入成功\n會員帳號：{account}\n您登入的時間是：\n{getTime()}')
+    if flag:
+        db.execute(f'SELECT Password FROM Members WHERE Account = "{account}";')
+        if db.fetchone()[0] == password:
+            db.execute(f'SELECT IsRent FROM Members WHERE Account = "{account}";')
+            ret =  int(db.fetchone()[0])
+            lineToken = getUserNotifyToken(1,account)
+            sendLineNotify(lineToken,f'\n登入成功\n會員帳號：{account}\n您登入的時間是：\n{getTime()}')
+        else:
+            ret = -2
     else:
-        ret = -2
+        ret = -1
     conn.close()
     return ret
 
